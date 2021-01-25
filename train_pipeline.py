@@ -14,7 +14,7 @@ from gpt_neox import (GPTNeoX, AutoregressiveWrapper, TextSamplerDataset,
 from gpt_neox.datasets import GPT2Dataset
 from gpt_neox.data_utils import get_tokenizer
 from gpt_neox.utils import is_main, get_args, get_params, save_ds_checkpoint, load_ds_checkpoint
-import gpt_neox
+from gpt_neox.pipeline_sampler import inference_batch
 
 WORLD_SIZE = os.getenv('WORLD_SIZE')
 
@@ -92,13 +92,18 @@ if __name__ == '__main__':
                                                                 optimizer=optim,
                                                                 model_parameters=ds_model_params,
                                                                 training_data=train_dataset)
-
+    model.inference_batch = inference_batch 
     configure_checkpointing(model)
     current_iteration = load_ds_checkpoint(model, params, iteration=None)
     pbar = trange(current_iteration, params.get('train_steps', 100000), mininterval=10., desc='Training Model', dynamic_ncols=True)
     for i in pbar:
-        loss = model.train_batch()
-        pbar.set_description(f'Training Loss: {loss.item():.4f}')
-        pbar.update()
-        if not i % params.get('checkpoint_save_frequency', 1000) and i != 0:
-            save_ds_checkpoint(i, model, params, params.get('keep_n_latest_checkpoints', 5), IS_MAIN)
+        output = model.inference_batch(model, 'hello world', tokenizer)
+        if output is not None:
+            print(output)
+            print(output.shape)
+            input('...')
+        # loss = model.train_batch()
+        # pbar.set_description(f'Training Loss: {loss.item():.4f}')
+        # pbar.update()
+        # if not i % params.get('checkpoint_save_frequency', 1000) and i != 0:
+        #     save_ds_checkpoint(i, model, params, params.get('keep_n_latest_checkpoints', 5), IS_MAIN)

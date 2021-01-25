@@ -144,3 +144,30 @@ class TextSamplerDataset(Dataset):
 
     def __len__(self):
         return self.data.size(0) // self.seq_len
+
+class SinglePromptDataset(Dataset):
+    '''
+    yes, this is dumb.
+    '''
+
+    def __init__(self, prompt, tokenizer, mode="normal"):
+        super().__init__()
+        self.prompt = prompt
+        self.tokenizer = tokenizer
+        assert mode in ["normal", "with_labels"]
+        self.mode = mode
+
+    def __getitem__(self, index):
+        if not torch.is_tensor(self.prompt):
+            x = torch.squeeze(self.tokenizer.encode(self.prompt, return_tensors='pt').long())
+        else:
+            x = self.prompt
+        if self.mode == "normal":
+            return x
+        elif self.mode == "with_labels":
+            return x, x
+        else:
+            raise ValueError(f'mode {self.mode} not recognized')
+
+    def __len__(self):
+        return 100000
