@@ -14,6 +14,7 @@
     "filetype": "tfrecords"
   },
   "num_epochs": 10,
+  "pipeline_num_stages": 1,
   "train_steps": 572300,
   "eval_batch_size": 32,
   "learning_rate": 0.0006,
