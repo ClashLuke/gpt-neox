@@ -15,6 +15,7 @@ from gpt_neox.datasets import GPT2Dataset
 from gpt_neox.data_utils import get_tokenizer
 from gpt_neox.utils import is_main, get_args, get_params, save_ds_checkpoint, load_ds_checkpoint
 from gpt_neox.pipeline_sampler import inference_batch
+from deepspeed.runtime.dataloader import RepeatingLoader
 
 WORLD_SIZE = os.getenv('WORLD_SIZE')
 
@@ -38,6 +39,17 @@ def prepare_dataset(dset_params, train_args):
     else:
         torch.distributed.barrier()
 
+def build_eval_data_iter(dataset, model):
+    sampler = torch.utils.data.distributed.DistributedSampler(
+        dataset,
+        num_replicas=model.dp_world_size,
+        rank=model.mpu.get_data_parallel_rank(),
+        shuffle=False)
+    # Build a loader and make it repeating.
+    pipe_dataloader = model.deepspeed_io(dataset, data_sampler=sampler)
+    pipe_dataloader = RepeatingLoader(pipe_dataloader)
+    return pipe_dataloader
+
 if __name__ == '__main__':
     # arguments
     train_args = get_args()
@@ -60,7 +72,7 @@ if __name__ == '__main__':
         heads=params["n_heads"],
         dim_head=params["dim_head"],
         loss_fn = loss_function,
-        num_stages = params.get("pipeline_num_stages", 2),
+        num_stages = params.get("pipeline_num_stages", 1),
         activation_checkpoint_interval=params.get('activation_checkpoint_interval', 1)
     )
 
@@ -80,30 +92,26 @@ if __name__ == '__main__':
                             mode='with_labels',
                             **dset_params)
 
-    val_loader = DataLoader(eval_dataset, batch_size=params["eval_batch_size"])
-    val_loader = cycle(val_loader)
-
     # optimizer
     ds_model_params = prepare_optimizer_parameters(model)
-    optim = torch.optim.Adam(ds_model_params, lr=params["learning_rate"])
     # deepspeed loader
     model, optim, train_loader, lr_scheduler = deepspeed.initialize(args=train_args,
                                                                 model=model,
-                                                                optimizer=optim,
+                                                                optimizer=None,
                                                                 model_parameters=ds_model_params,
                                                                 training_data=train_dataset)
-    model.inference_batch = inference_batch 
     configure_checkpointing(model)
     current_iteration = load_ds_checkpoint(model, params, iteration=None)
     pbar = trange(current_iteration, params.get('train_steps', 100000), mininterval=10., desc='Training Model', dynamic_ncols=True)
+    val_loader = build_eval_data_iter(eval_dataset, model)
     for i in pbar:
-        output = model.inference_batch(model, 'hello world', tokenizer)
-        if output is not None:
-            print(output)
-            print(output.shape)
-            input('...')
-        # loss = model.train_batch()
-        # pbar.set_description(f'Training Loss: {loss.item():.4f}')
-        # pbar.update()
-        # if not i % params.get('checkpoint_save_frequency', 1000) and i != 0:
-        #     save_ds_checkpoint(i, model, params, params.get('keep_n_latest_checkpoints', 5), IS_MAIN)
+        loss = model.train_batch()
+        pbar.set_description(f'Training Loss: {loss.item():.4f}')
+        pbar.update()
+        if not i % params.get('checkpoint_save_frequency', 1000) and i != 0:
+            save_ds_checkpoint(i, model, params, params.get('keep_n_latest_checkpoints', 5), IS_MAIN)
+        if not i % params.get('evaluate_every', 5) and i != 0:
+            loss = model.eval_batch(val_loader)
+            if IS_MAIN:
+                print(f'Eval Loss: {loss.item():.4f}')
+
