@@ -8,6 +8,7 @@ import shutil
 import re
 import random
 import numpy as np
+import requests
 import torch
 
 
@@ -18,6 +19,7 @@ def get_args():
     parser.add_argument('--model', type=str, default="gpt3_small")
     parser.add_argument('--local_rank', type=int, default=-1,
                         help='local rank passed from distributed launcher')
+    parser.add_argument('--group_name', type=str, default=None, help='Group name used by wandb')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
     return args
@@ -177,3 +179,14 @@ class DictArgs(dict):
             del self[name]
         else:
             raise AttributeError("No such attribute: " + name)
+
+
+def get_wandb_api_key():
+    """ Get Weights and Biases API key from ENV or .netrc file. Otherwise return None """
+    if 'WANDB_API_KEY' in os.environ:
+        return os.environ['WANDB_API_KEY']
+
+    wandb_token = requests.utils.get_netrc_auth('https://api.wandb.ai')
+
+    if wandb_token is not None:
+        return wandb_token[1]
