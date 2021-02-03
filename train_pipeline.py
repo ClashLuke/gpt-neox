@@ -17,7 +17,7 @@ from gpt_neox import (GPTNeoX, AutoregressiveWrapper, TextSamplerDataset,
 from gpt_neox.datasets import GPT2Dataset
 from gpt_neox.data_utils import get_tokenizer
 
-from gpt_neox.utils import is_main, get_args, get_params, save_ds_checkpoint, load_ds_checkpoint, get_wandb_api_key
+from gpt_neox.utils import is_main, get_args, save_ds_checkpoint, load_ds_checkpoint, get_wandb_api_key
 
 import gpt_neox
 
