@@ -17,7 +17,7 @@ def get_args():
     parser = argparse.ArgumentParser(description='GPTNeox Deepspeed Training Script')
     # Include DeepSpeed configuration arguments
     parser.add_argument('--configs', help='path to JSON file containing model arguments.')
-    parser.add_argument('--deepspeed', type=Boolean, default=True, help='This should always be true.')
+    parser.add_argument('--deepspeed', default=True, help='This should always be true.')
     parser.add_argument('--model', type=str, default="gpt3_small", help='The model you wish to train.')
     parser.add_argument('--local_rank', type=int, default=-1,
                         help='Local rank passed from distributed launcher')
