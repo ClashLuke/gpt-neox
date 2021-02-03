@@ -1,45 +1,74 @@
 {
+    "tokenizer": {
+        "type": "hf_gpt2tokenizerfast",
+        "from_pretrained": true,
+        "add_padding_token": false
+    },
+    "dataset": {
+        "name": "enron_tfr",
+        "train_path": "./data/enron_tfr/tokenized/*.tfrecords",
+        "eval_path": "./data/enron_tfr/tokenized/*.tfrecords",
+        "seed": 1,
+        "shuffle_input_filenames": true,
+        "pretokenized": true,
+        "filetype": "tfrecords"
+    },
+    "num_epochs": 10,
+    "train_steps": 572300,
+    "eval_batch_size": 32,
+    "learning_rate": 0.0006,
+    "generate_length": 256,
+    "seq_len": 1024,
+    "hidden_dim": 768,
+    "n_layers": 12,
+    "n_heads": 12,
+    "dim_head": 64,
+    "checkpoint_dir": "./gpt3small",
+    "train_batch_size": 256,
+    "wandb": {
+        "team": "eleutherai",
+        "watch_model": null
+    }
     "train_batch_size": 1280,
     "gradient_accumulation_steps": 80,
     "gradient_clipping": 1.0,
     "wall_clock_breakdown": true,
     "zero_allow_untested_optimizer": true,
     "tensorboard": {
-      "enabled": true,
-      "output_path": "./logs",
-      "job_name": "gptneox"
+        "enabled": true,
+        "output_path": "./logs",
+        "job_name": "gptneox"
     },
     "optimizer": {
-      "type": "OneBitAdam",
-      "params": {
-        "lr": 2e-4,
-    "freeze_step":2,
-    "cuda_aware":true
-      }
+        "type": "OneBitAdam",
+        "params": {
+            "lr": 2e-4,
+            "freeze_step":2,
+            "cuda_aware":true
+        }
     },
     "scheduler": {
-      "type": "WarmupLR",
-      "params": {
-        "warmup_min_lr": 0,
-        "warmup_max_lr": 0.00015,
-        "warmup_num_steps": 5000
-      }
+        "type": "WarmupLR",
+        "params": {
+          "warmup_min_lr": 0,
+          "warmup_max_lr": 0.00015,
+          "warmup_num_steps": 5000
+        }
     },
     "fp16": {
-      "enabled": true
+        "enabled": true
     },
     "zero_optimization": {
-      "stage": 1,
-      "contiguous_gradients" : true,
-      "cpu_offload": false
+        "stage": 1,
+        "contiguous_gradients" : true,
+        "cpu_offload": false
     },
-      "activation_checkpointing": {
-      "partition_activations": true,
-      "cpu_checkpointing": false,
-      "contiguous_memory_optimization": false,
-      "number_checkpoints": 1,
-      "synchronize_checkpoint_boundary": false,
-      "profile": false
+    "activation_checkpointing": {
+    "partition_activations": true,
+    "cpu_checkpointing": false,
+    "contiguous_memory_optimization": false,
+    "number_checkpoints": 1,
+    "synchronize_checkpoint_boundary": false,
+    "profile": false
     }
-
 }
