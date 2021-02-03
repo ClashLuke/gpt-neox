@@ -73,7 +73,7 @@ if __name__ == '__main__':
         dim=args.get("hidden_dim", 0),
         seq_len=args.get("seq_len", 0),
         depth=args.get("n_layers", 0),
-        heads=args("n_heads"), 0),
+        heads=args("n_heads", 0),
         dim_head=args("dim_head", 0),
         loss_fn = loss_function,
         num_stages = args.get("pipeline_num_stages", 2),
