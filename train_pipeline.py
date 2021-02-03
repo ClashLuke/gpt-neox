@@ -64,19 +64,17 @@ if __name__ == '__main__':
     deepspeed.init_distributed(dist_backend='nccl')
 
     # tokenizer
-    tokenizer = get_tokenizer(tokenizer_type=args["tokenizer"].get("type", None),
-                            from_pretrained=args["tokenizer"].get("from_pretrained", True),
-                            add_padding_token=args["tokenizer"].get("add_padding_token", False))
-    vocab_size = len(tokenizer) if args["vocab_size"] is None else args["vocab_size"]
-
+    tokenizer = get_tokenizer(tokenizer_type=args.get("tokenizer", None).get("type", None),
+                            from_pretrained=args.get("tokenizer", None).get("from_pretrained", True),
+                            add_padding_token=args.get("tokenizer", None).get("add_padding_token", False))
     # model
     model = GPTNeoX_Pipe(
-        num_tokens=vocab_size,
-        dim=args["hidden_dim"],
-        seq_len=args["seq_len"],
-        depth=args["n_layers"],
-        heads=args["n_heads"],
-        dim_head=args["dim_head"],
+        num_tokens=args.get("vocab_size", len(tokenizer)),
+        dim=args.get("hidden_dim", 0),
+        seq_len=args.get("seq_len", 0),
+        depth=args.get("n_layers", 0),
+        heads=args("n_heads"), 0),
+        dim_head=args("dim_head", 0),
         loss_fn = loss_function,
         num_stages = args.get("pipeline_num_stages", 2),
         activation_checkpoint_interval=args.get('activation_checkpoint_interval', 1)
