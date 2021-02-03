@@ -16,21 +16,20 @@ import torch
 def get_args():
     parser = argparse.ArgumentParser(description='GPTNeox Deepspeed Training Script')
     # Include DeepSpeed configuration arguments
-    parser.add_argument('--model', type=str, default="gpt3_small")
+    parser.add_argument('--configs', help='path to JSON file containing model arguments.')
+    parser.add_argument('--deepspeed', type=Boolean, default=True, help='This should always be true.')
+    parser.add_argument('--model', type=str, default="gpt3_small", help='The model you wish to train.')
     parser.add_argument('--local_rank', type=int, default=-1,
-                        help='local rank passed from distributed launcher')
+                        help='Local rank passed from distributed launcher')
     parser.add_argument('--group_name', type=str, default=None, help='Group name used by wandb')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
+    if args.load_json:
+    with open(args.load_json, 'rt') as f:
+        t_args = argparse.Namespace()
+        t_args.__dict__.update(json.load(f))
+        args = parser.parse_args(namespace=t_args)
     return args
-
-
-def get_params(model):
-    model_path = model if model.endswith(".json") else f"./configs/{model}.json"
-    with open(model_path) as f:
-        params = json.load(f)
-    return defaultdict(lambda: None, params)
-
 
 def is_main(args):
     """
