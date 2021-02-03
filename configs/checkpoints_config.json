@@ -28,7 +28,7 @@
     "wandb": {
         "team": "eleutherai",
         "watch_model": null
-    }
+    },
     "gradient_accumulation_steps": 80,
     "gradient_clipping": 1.0,
     "wall_clock_breakdown": true,
