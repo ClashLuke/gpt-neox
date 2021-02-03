@@ -25,10 +25,10 @@ def get_args():
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
     if args.load_json:
-    with open(args.load_json, 'rt') as f:
-        t_args = argparse.Namespace()
-        t_args.__dict__.update(json.load(f))
-        args = parser.parse_args(namespace=t_args)
+        with open(args.load_json, 'rt') as f:
+            t_args = argparse.Namespace()
+            t_args.__dict__.update(json.load(f))
+            args = parser.parse_args(namespace=t_args)
     return args
 
 def is_main(args):
