@@ -24,8 +24,8 @@ def get_args():
     parser.add_argument('--group_name', type=str, default=None, help='Group name used by wandb')
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
-    if args.load_json:
-        with open(args.load_json, 'rt') as f:
+    if args.configs:
+        with open(args.configs, 'rt') as f:
             t_args = argparse.Namespace()
             t_args.__dict__.update(json.load(f))
             args = parser.parse_args(namespace=t_args)
